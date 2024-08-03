@@ -206,51 +206,39 @@ contract Q98 {
 
 contract Q99 {
     /*
-    inline - 4개의 숫자를 받아서 가장 큰수와 작은 수를 반환하는 함수를 구현하세요.
+    inline - bytes4형 b의 값을 정하는 함수 setB를 구현하세요.
     */
 
-    function compare(uint[4] memory _numbers) public pure returns(uint max, uint min) {
-        assembly {
-            let ptr := _numbers
-            min := mload(ptr)
-            max := mload(ptr)
+    bytes4 public b;
 
-            for { let i := 1 } lt(i, 4) { i := add(i, 1) } {
-                let num := mload(add(ptr, mul(i, 0x20)))
-                
-                if gt(num, max) {
-                    max := num
-                }
-                
-                if lt(num, min) {
-                    min := num
-                }
-            }
+    function setB(bytes4 _b) public {
+        assembly {
+            sstore(b.slot, shr(224, _b))
         }
     }
 }
 
 contract Q100 {
     /*
-    inline - 4개의 숫자를 받아서 가장 큰수와 작은 수를 반환하는 함수를 구현하세요.
+    inline - bytes형 변수 b의 값을 정하는 함수 setB를 구현하세요.
     */
+    
+    bytes public b;
 
-    function compare(uint[4] memory _numbers) public pure returns(uint max, uint min) {
+    function setB(bytes memory _b) public {
         assembly {
-            let ptr := _numbers
-            min := mload(ptr)
-            max := mload(ptr)
+            let len := mload(_b)
+            let start := add(_b, 0x20)
+            
+            let slot := b.slot
+            mstore(0x0, slot)
+            sstore(slot, len)
 
-            for { let i := 1 } lt(i, 4) { i := add(i, 1) } {
-                let num := mload(add(ptr, mul(i, 0x20)))
-                
-                if gt(num, max) {
-                    max := num
-                }
-                
-                if lt(num, min) {
-                    min := num
-                }
+            let nslot := add(keccak256(0x0, 0x20), len)
+
+            for {let i := 0} lt(i, len) {i := add(i, 1)} {                    
+                sstore(nslot, mload(add(start, mul(i, 0x20))))
+                nslot := add(nslot, i)
             }
         }
     }
